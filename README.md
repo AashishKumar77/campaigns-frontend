@@ -1,5 +1,5 @@
 # campaigns-frontend
-1. git clone https://github.com/AashishKumar77/campaigns-frontend
+1. git clone https://github.com/AashishKumar77/campaigns-frontend.git
 2. cd frontend 
 3. checkout to master branch
 4. npm install 
