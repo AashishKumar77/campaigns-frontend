@@ -24,6 +24,13 @@ const CampaignForm = ({ campaign, onSave }) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const handleStartDateChange = (date) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      startDate: date,
+    }));
+  };
+
   const handleScheduleChange = (index, e) => {
     const { name, value } = e.target;
     const updatedSchedule = [...formData.schedule];
@@ -89,9 +96,10 @@ const CampaignForm = ({ campaign, onSave }) => {
             <Form.Label>Start Date</Form.Label>
             <DatePicker
               selected={formData.startDate}
-              onChange={(date) => setFormData({ ...formData, startDate: date })}
+              onChange={handleStartDateChange}
               dateFormat="yyyy/MM/dd"
               className="form-control"
+              minDate={new Date()} // Cannot select a date before today
               isInvalid={!!errors.dates}
             />
           </Form.Group>
@@ -105,6 +113,7 @@ const CampaignForm = ({ campaign, onSave }) => {
               onChange={(date) => setFormData({ ...formData, endDate: date })}
               dateFormat="yyyy/MM/dd"
               className="form-control"
+              minDate={formData.startDate} // Ensures it cannot be earlier than start date
               isInvalid={!!errors.dates}
             />
           </Form.Group>
@@ -115,7 +124,7 @@ const CampaignForm = ({ campaign, onSave }) => {
         <Row key={index}>
           <Col md={4}>
             <Form.Group controlId={`schedule[${index}].weekday`}>
-              <Form.Label>{`Weekday ${formData.schedule.length>1 ? index+1 : '' } `}</Form.Label>
+              <Form.Label>{`Weekday ${formData.schedule.length > 1 ? index + 1 : ''}`}</Form.Label>
               <Form.Control
                 as="select"
                 name="weekday"
@@ -159,7 +168,7 @@ const CampaignForm = ({ campaign, onSave }) => {
                 onChange={(e) => handleScheduleChange(index, e)}
                 isInvalid={!!errors[`schedule[${index}].time`]}
               />
-            </Form.Group>   
+            </Form.Group>
           </Col>
 
           {formData.schedule.length > 1 && (
