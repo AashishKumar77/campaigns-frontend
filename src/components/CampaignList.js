@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Table, Button, Modal } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
+
 const CampaignList = ({ campaigns, onEdit, onDelete }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState(null);
@@ -18,26 +19,43 @@ const CampaignList = ({ campaigns, onEdit, onDelete }) => {
     setShowConfirmModal(true);
   };
 
-  const getNextScheduledActivation = (schedule) => {
+  const getNextScheduledActivation = (campaign) => {
+    console.log(campaign, "== campaign");
     const currentDate = new Date();
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    // Find the next valid scheduled activation
-    for (let scheduleItem of schedule) {
-      const targetDay = daysOfWeek.indexOf(scheduleItem.weekday);
-      if (targetDay === -1) continue;
-  
-      // Calculate the next activation date based on the weekday and time
-      const nextActivation = new Date(currentDate);
-      nextActivation.setDate(currentDate.getDate() + ((targetDay - currentDate.getDay() + 7) % 7));
-      nextActivation.setHours(scheduleItem.startTime.split(':')[0], scheduleItem.startTime.split(':')[1]);
-  
-      if (nextActivation > currentDate) {
-        return nextActivation;
-      }
+
+    if (new Date(campaign.endDate) > currentDate) {
+        let closestDate = null;
+
+        campaign.schedule.forEach((key) => {
+            const targetDay = daysOfWeek.indexOf(key.weekday);
+            const nextActivation = new Date(currentDate);
+
+            let daysUntilNext = (targetDay - currentDate.getDay() + 7) % 7;
+            if (daysUntilNext === 0) {
+                // If it's the same day, check if the activation time has already passed
+                const [startHour, startMinute] = key.startTime.split(':').map(Number);
+                const currentHours = currentDate.getHours();
+                const currentMinutes = currentDate.getMinutes();
+
+                if (startHour < currentHours || (startHour === currentHours && startMinute <= currentMinutes)) {
+                    daysUntilNext = 7; // Move to next week's same day
+                }
+            }
+
+            nextActivation.setDate(currentDate.getDate() + daysUntilNext);
+            nextActivation.setHours(...key.startTime.split(':').map(Number), 0, 0);
+
+            if (!closestDate || nextActivation < closestDate) {
+                closestDate = nextActivation;
+            }
+        });
+
+        return closestDate ? closestDate.toLocaleString() : 'No upcoming activation';
     }
-    return null;
-  };
+
+    return 'No upcoming activation';
+};
   
   return (
     <div className="my-4">
@@ -59,9 +77,10 @@ const CampaignList = ({ campaigns, onEdit, onDelete }) => {
               <td>{new Date(campaign.startDate).toLocaleDateString()}</td>
               <td>{new Date(campaign.endDate).toLocaleDateString()}</td>
               <td>
-                {getNextScheduledActivation(campaign.schedule)
-                  ? new Date(getNextScheduledActivation(campaign.schedule)).toLocaleString()
-                  : 'No upcoming activation'}
+                {getNextScheduledActivation(campaign) 
+                  // ? new Date(getNextScheduledActivation(campaign)).toLocaleString()
+                  // : 'No upcoming activation'
+                  }
               </td>
               <td>
                 <Button variant="warning" onClick={() => onEdit(campaign)}>Edit</Button>{' '}
